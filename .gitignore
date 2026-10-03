@@ -1,6 +1,11 @@
 __pycache__/
 *.py[cod]
 .venv/
-instance/
 .pytest_cache/
 .env
+
+# File database utama sengaja ikut repository agar clone baru langsung siap.
+# Hanya file sementara SQLite yang tidak boleh ikut Git.
+instance/*.sqlite3-journal
+instance/*.sqlite3-shm
+instance/*.sqlite3-wal
