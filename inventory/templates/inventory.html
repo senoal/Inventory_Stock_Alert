@@ -1,0 +1,11 @@
+{% extends 'base.html' %}{% block title %}Inventaris{% endblock %}
+{% block content %}<div class="page-heading"><div><p class="eyebrow">STOCK OPERATIONS</p><h1>Penyesuaian Stok</h1><p>Catat barang masuk, keluar, atau koreksi persediaan.</p></div></div>
+<div class="row g-4"><div class="col-xl-4"><section class="panel form-panel"><h2>Transaksi Baru</h2><form method="post">
+  <label class="form-label">Produk</label><select class="form-select mb-3" name="product_id" required><option value="">Pilih produk</option>{% for p in products %}<option value="{{ p.id }}">{{ p.sku }} — {{ p.name }} ({{ p.stock }} {{ p.unit }})</option>{% endfor %}</select>
+  <label class="form-label">Jenis pergerakan</label><select class="form-select mb-3" name="movement_type" id="movementType"><option value="IN">Barang masuk</option><option value="OUT">Barang keluar / penjualan</option><option value="ADJUSTMENT">Koreksi stok akhir</option></select>
+  <label class="form-label" id="quantityLabel">Kuantitas</label><input class="form-control mb-3" type="number" min="0" name="quantity" required>
+  <label class="form-label">Referensi</label><input class="form-control mb-3" name="reference" placeholder="PO-001 / SALE-001">
+  <label class="form-label">Catatan</label><textarea class="form-control mb-4" name="notes" rows="3" placeholder="Keterangan transaksi"></textarea>
+  <button class="btn btn-primary w-100">Catat Pergerakan</button></form></section></div>
+<div class="col-xl-8"><section class="panel"><div class="panel-head"><div><h2>Mutasi Terbaru</h2><p>20 aktivitas stok terakhir</p></div><a href="{{ url_for('main.transactions') }}">Lihat semua</a></div>
+<div class="table-responsive"><table class="table align-middle"><thead><tr><th>Waktu</th><th>Produk</th><th>Jenis</th><th>Perubahan</th><th>Stok Akhir</th></tr></thead><tbody>{% for m in movements %}<tr><td>{{ m.created_at|date_id }}</td><td><strong>{{ m.product_name }}</strong><small>{{ m.sku }}</small></td><td><span class="movement-badge {{ m.movement_type|lower }}">{{ m.movement_type }}</span></td><td>{{ '+' if m.movement_type=='IN' else ('-' if m.movement_type=='OUT' else '') }}{{ m.quantity }} {{ m.unit }}</td><td><strong>{{ m.stock_after }} {{ m.unit }}</strong></td></tr>{% endfor %}</tbody></table></div></section></div></div>{% endblock %}

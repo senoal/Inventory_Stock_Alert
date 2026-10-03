@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <div><p class="eyebrow">OPERATIONS OVERVIEW</p><h1>Selamat datang kembali 👋</h1><p>Pantau kesehatan inventaris dan ambil tindakan lebih cepat.</p></div>
+  <a href="{{ url_for('main.inventory') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Catat Stok</a>
+</div>
+<div class="row g-3 mb-4">
+  {% set cards = [
+    ('bi-box-seam','Produk Aktif',summary.products,'Dikelola dalam sistem','blue'),
+    ('bi-stack','Unit Tersedia',summary.stock_units,'Total seluruh produk','teal'),
+    ('bi-wallet2','Nilai Persediaan',summary.inventory_value|currency,'Berdasarkan harga beli','violet'),
+    ('bi-exclamation-triangle','Perlu Perhatian',summary.low_stock,'Stok menipis / kritis','orange')
+  ] %}
+  {% for icon,label,value,caption,color in cards %}
+  <div class="col-12 col-sm-6 col-xl-3"><div class="metric-card">
+    <div class="metric-icon {{ color }}"><i class="bi {{ icon }}"></i></div>
+    <div><span>{{ label }}</span><strong>{{ value }}</strong><small>{{ caption }}</small></div>
+  </div></div>
+  {% endfor %}
+</div>
+<div class="row g-4 mb-4">
+  <div class="col-xl-8"><section class="panel h-100">
+    <div class="panel-head"><div><h2>Pergerakan Stok</h2><p>Barang masuk dan keluar 30 hari terakhir</p></div><span class="tag">30 hari</span></div>
+    <div class="chart-wrap"><canvas id="movementChart"></canvas></div>
+  </section></div>
+  <div class="col-xl-4"><section class="panel h-100">
+    <div class="panel-head"><div><h2>Stok per Kategori</h2><p>{{ category_count }} kategori aktif</p></div></div>
+    <div class="chart-wrap donut"><canvas id="categoryChart"></canvas></div>
+  </section></div>
+</div>
+<div class="row g-4">
+  <div class="col-xl-7"><section class="panel">
+    <div class="panel-head"><div><h2>Produk Perlu Perhatian</h2><p>Prioritaskan pengadaan untuk produk berikut</p></div><a href="{{ url_for('main.alerts') }}">Lihat semua</a></div>
+    <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Produk</th><th>Stok</th><th>Status</th><th>Restock</th></tr></thead><tbody>
+    {% for product in alerts %}{% set tone,label = stock_status(product.stock, product.min_stock) %}
+      <tr><td><strong>{{ product.name }}</strong><small>{{ product.sku }} · {{ product.category_name }}</small></td><td>{{ product.stock }} {{ product.unit }}</td><td><span class="stock-badge {{ tone }}">{{ label }}</span></td><td>{{ [product.target_stock-product.stock,0]|max }} {{ product.unit }}</td></tr>
+    {% else %}<tr><td colspan="4" class="empty-state">Semua stok dalam kondisi aman.</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section></div>
+  <div class="col-xl-5"><section class="panel">
+    <div class="panel-head"><div><h2>Aktivitas Terbaru</h2><p>Jejak mutasi inventaris</p></div><a href="{{ url_for('main.transactions') }}">Riwayat</a></div>
+    <div class="activity-list">{% for movement in recent %}
+      <div class="activity"><span class="activity-icon {{ movement.movement_type|lower }}"><i class="bi bi-{{ 'arrow-down-left' if movement.movement_type == 'IN' else ('arrow-up-right' if movement.movement_type == 'OUT' else 'sliders') }}"></i></span><div><strong>{{ movement.product_name }}</strong><small>{{ movement.created_at|date_id }} · {{ movement.reference or 'Tanpa referensi' }}</small></div><b>{{ '+' if movement.movement_type == 'IN' else ('-' if movement.movement_type == 'OUT' else '') }}{{ movement.quantity }}</b></div>
+    {% endfor %}</div>
+  </section></div>
+</div>
+<div class="insight-bar mt-4"><i class="bi bi-lightbulb"></i><div><strong>Insight inventaris</strong><span>Ada {{ slow_count }} produk yang memenuhi kriteria slow-moving. Tinjau promosi atau strategi pengadaan.</span></div><a href="{{ url_for('main.slow_moving') }}" class="btn btn-sm btn-light">Analisis</a></div>
+{% endblock %}
+{% block scripts %}<script>
+window.dashboardData = {
+  trendLabels: {{ trend|map(attribute='day')|list|tojson }},
+  incoming: {{ trend|map(attribute='incoming')|list|tojson }},
+  outgoing: {{ trend|map(attribute='outgoing')|list|tojson }},
+  categoryLabels: {{ categories|map(attribute='name')|list|tojson }},
+  categoryStock: {{ categories|map(attribute='stock')|list|tojson }}
+}; initDashboardCharts(window.dashboardData);
+</script>{% endblock %}

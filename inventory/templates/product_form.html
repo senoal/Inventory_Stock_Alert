@@ -1,0 +1,14 @@
+{% extends 'base.html' %}{% block title %}{{ 'Edit' if product else 'Tambah' }} Produk{% endblock %}
+{% block content %}<div class="page-heading"><div><p class="eyebrow">PRODUCT CATALOG</p><h1>{{ 'Edit Produk' if product else 'Tambah Produk' }}</h1><p>Isi informasi dasar dan aturan persediaan produk.</p></div></div>
+<form method="post"><div class="row g-4"><div class="col-xl-8"><section class="panel form-panel"><h2>Informasi Produk</h2><div class="row g-3">
+  <div class="col-md-4"><label class="form-label">SKU</label><input class="form-control" name="sku" required value="{{ request.form.get('sku',product.sku if product else '') }}"></div>
+  <div class="col-md-8"><label class="form-label">Nama produk</label><input class="form-control" name="name" required value="{{ request.form.get('name',product.name if product else '') }}"></div>
+  <div class="col-md-6"><label class="form-label">Kategori</label><select class="form-select" name="category_id" required>{% for c in categories %}<option value="{{ c.id }}" {{ 'selected' if (request.form.get('category_id')|int == c.id or (not request.form and product and product.category_id==c.id)) }}>{{ c.name }}</option>{% endfor %}</select></div>
+  <div class="col-md-6"><label class="form-label">Satuan</label><input class="form-control" name="unit" required value="{{ request.form.get('unit',product.unit if product else 'pcs') }}"></div>
+  <div class="col-md-6"><label class="form-label">Harga beli</label><input class="form-control" type="number" min="0" name="purchase_price" required value="{{ request.form.get('purchase_price',product.purchase_price if product else 0) }}"></div>
+  <div class="col-md-6"><label class="form-label">Harga jual</label><input class="form-control" type="number" min="0" name="selling_price" required value="{{ request.form.get('selling_price',product.selling_price if product else 0) }}"></div>
+</div></section></div><div class="col-xl-4"><section class="panel form-panel"><h2>Aturan Stok</h2>
+  <label class="form-label">{{ 'Stok saat ini (ubah dari Inventaris)' if product else 'Stok awal' }}</label><input class="form-control mb-3" type="number" min="0" name="stock" {{ 'readonly' if product }} value="{{ request.form.get('stock',product.stock if product else 0) }}">
+  <label class="form-label">Batas minimum</label><input class="form-control mb-3" type="number" min="0" name="min_stock" required value="{{ request.form.get('min_stock',product.min_stock if product else 5) }}">
+  <label class="form-label">Target stok</label><input class="form-control" type="number" min="0" name="target_stock" required value="{{ request.form.get('target_stock',product.target_stock if product else 20) }}">
+</section></div></div><div class="form-actions"><a class="btn btn-light" href="{{ url_for('main.products') }}">Batal</a><button class="btn btn-primary">Simpan Produk</button></div></form>{% endblock %}
